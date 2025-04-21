@@ -53,6 +53,8 @@ struct sFONT {
   uint16_t Height;
 };
 
+extern sFONT Font48;
+extern sFONT Font36;
 extern sFONT Font24;
 extern sFONT Font20;
 extern sFONT Font16;

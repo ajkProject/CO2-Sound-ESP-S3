@@ -191,6 +191,8 @@ void printDate(Stream &str);
 void printTime(Stream &str);
 int wifiScan();
 
+char* months[12] = {"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
+
 void PrintUint64(uint64_t& value) {
   Serial.print("0x");
   Serial.print((uint32_t)(value >> 32), HEX);
@@ -631,7 +633,7 @@ bool DisplayCO2(DataRecord *currentRecord) {
   paint.DrawStringAt(4, 86, temperatureStr, &Font12, DARKGRAY);
   paint.DrawStringAt(4 + Font12.Width*10, 86, humidity, &Font12, DARKGRAY);
 
-  paint.Bar( 4, 36, 120, 30, co2Concentration, 1000 , 0, 1500, DARKGRAY);
+  //paint.Bar( 4, 36, 120, 30, co2Concentration, 1000 , 0, 1500, DARKGRAY);
 
   currentRecord->SetCO2(co2Concentration);
 
@@ -642,13 +644,13 @@ void DisplayTime( DataRecord *currentRecord)
  {
 
   char currentTime[16];
-  sprintf(currentTime, "%02d:%02d:%02d", rtc.hours(), rtc.minutes(), rtc.seconds());
+  sprintf(currentTime, "%02d:%02d", rtc.hours(), rtc.minutes());
   char currentDate[16];
-  sprintf(currentDate, "%04d-%02d-%02d", 2000 + rtc.year(), rtc.month(), rtc.day());
+  sprintf(currentDate, "%2d %s %04d",rtc.day(), months[rtc.month()], 2000 + rtc.year());
   
  
-  paint.DrawStringAt(4, 4, currentTime, &Font24, BLACK);  
-  //paint.DrawStringAt(4, 36, currentDate, &Font24, COLORED);
+  paint.DrawStringAt(4, 4, currentTime, &Font36, BLACK);  
+  paint.DrawStringAt(7, 44, currentDate, &Font16, BLACK);
 
   currentRecord->SetTime(rtc.hours(), rtc.minutes());
   
@@ -676,6 +678,9 @@ void DisplaySoundLevel( DataRecord *currentRecord)
   Serial.print("Max Sound Level (dB SPL) = ");
   Serial.println(max_sound_level);
 
+  //Clear min/max registers
+  reg_write(PCBARTISTS_DBM, I2C_REG_RESET, 0x02);
+
   char maxSoundLevel[16];
   sprintf(maxSoundLevel, "Max %3ddB", max_sound_level);
   
@@ -686,9 +691,10 @@ void DisplaySoundLevel( DataRecord *currentRecord)
   paint.DrawStringAt(4 + Font12.Width * 10, 114, maxSoundLevel, &Font12, BLACK);
 
   currentRecord->SetSound(sound_level);
+  currentRecord->SetIntMaxSound(max_sound_level);
 }
 
-void UpdateDisplay()
+void UpdateDisplay( )
 {
   DataRecord currentRecord;
   paint.SetRotate(ROTATE_90);
@@ -716,11 +722,10 @@ void UpdateDisplay()
   graph->DrawDoubleGraph( 148, 4, 144, 120, currentRecord.GetHour(), currentRecord.GetMinute());
   
   epd.SetFrameMemory_Partial(paint.GetImage(), 0, 0, paint.GetWidth(), paint.GetHeight());
-
+ 
   epd.DisplayFrame_Partial();
-
-  frameCount++;
-
+  epd.WaitUntilIdle();
+  
 }
 
 void setup()
@@ -779,19 +784,26 @@ void loop()
 
   rtc.read();
 
-  Serial.print(rtc.lastRead());
-  Serial.print("\t");
-  printDate(Serial);
-  Serial.print(" ");
-  printTime(Serial);
-  Serial.println();
-  UpdateDisplay();
+  if( rtc.seconds() == 0 )
+  {
+  
+    if( rtc.minutes() == 18 )
+    {
+        epd.ClearFrameMemory(WHITE);   // bit set = white, bit reset = black
+        epd.DisplayFrame();
+        epd.WaitUntilIdle();
+    }
+    Serial.print(rtc.lastRead());
+    Serial.print("\t");
+    printDate(Serial);
+    Serial.print(" ");
+    printTime(Serial);
+    Serial.println();
+    UpdateDisplay();
+  
+  }
 
-  //Make this wake up every second and check the minte has changed
-
-  //DisplayCO2();
-
-  delay(100);
+  delay(1000);
 }
 
 void printDate(Stream &str)

@@ -7,7 +7,7 @@ class DataBuffer
 
         ~DataBuffer();
 
-        void AddRecord(int co2, int sound, int hour, int minute);
+        void AddRecord(int co2, int sound, int maxIntSound, int hour, int minute);
         void AddRecord(DataRecord record); // Add a record to the buffer
 
         int GetMaxCO2(); 
@@ -17,7 +17,7 @@ class DataBuffer
 
         //Todo - do we pass out an index or just have one.
         int CreateIndexer(); 
-        bool GetNextRecord(int &co2, int &sound, int &hour, int &minute, int &indexer); // Get the next record and update the indexer
+        bool GetNextRecord(int &co2, int &sound, int &maxIntSound, int &hour, int &minute, int &indexer); // Get the next record and update the indexer
 
         int GetRecordCount();
 

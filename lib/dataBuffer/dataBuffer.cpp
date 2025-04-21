@@ -12,19 +12,20 @@ DataBuffer::~DataBuffer()
     delete[] buffer; // Free the allocated memory
 }
 
-void DataBuffer::AddRecord(int co2, int sound, int hour, int minute)
+void DataBuffer::AddRecord(int co2, int sound, int maxIntSound, int hour, int minute)
 {
 
     int deletingCO2 = buffer[saveIndex].GetCO2(); // Get the CO2 value of the record being replaced
-    int deletingSound = buffer[saveIndex].GetSound(); // Get the sound value of the record being replaced
+    int deletingMaxSound = buffer[saveIndex].GetIntMaxSound(); // Get the sound value of the record being replaced
+    int deletingMinSound = buffer[saveIndex].GetSound(); // Get the sound value of the record being replaced
 
        // Update min and max values
        if (co2 > maxCo2) maxCo2 = co2;
        if (co2 < minCo2) minCo2 = co2;
-       if (sound > maxSound) maxSound = sound;
+       if (maxIntSound > maxSound) maxSound = maxIntSound;
        if (sound < minSound) minSound = sound;
    
-    buffer[saveIndex].UpdateDataRecord(co2, sound, hour, minute);
+    buffer[saveIndex].UpdateDataRecord(co2, sound, maxIntSound, hour, minute);
 
     if(deletingCO2 == maxCo2) // we are about to delete the maxCo2 value
     {
@@ -54,20 +55,20 @@ void DataBuffer::AddRecord(int co2, int sound, int hour, int minute)
         }
     }
     // Update min and max values
-    if(deletingSound == maxSound) // we are about to delete the maxSound value
+    if(deletingMaxSound == maxSound) // we are about to delete the maxSound value
     {
         // Find the new maxSound in the buffer
 
         maxSound = 0; // Reset maxSound to find the new maximum
         for (int i = 0; i < size; i++)
         {
-            if (buffer[i].GetSound() > maxSound)
+            if (buffer[i].GetIntMaxSound() > maxSound)
             {
-                maxSound = buffer[i].GetSound(); // Update maxSound to the new value
+                maxSound = buffer[i].GetIntMaxSound(); // Update maxSound to the new value
             }
         }
     }
-    if(deletingSound == minSound) // we are about to delete the minSound value
+    if(deletingMinSound == minSound) // we are about to delete the minSound value
     {
         // Find the new minSound in the buffer
 
@@ -100,7 +101,7 @@ void DataBuffer::AddRecord(int co2, int sound, int hour, int minute)
 
 void DataBuffer::AddRecord(DataRecord record) // Add a record to the buffer
 {
-    AddRecord(record.GetCO2(), record.GetSound(), record.GetHour(), record.GetMinute()); // Use the existing AddRecord method
+    AddRecord(record.GetCO2(), record.GetSound(), record.GetIntMaxSound(), record.GetHour(), record.GetMinute()); // Use the existing AddRecord method
 }
 
 int DataBuffer::GetMaxCO2() { return maxCo2; }
@@ -113,13 +114,14 @@ int DataBuffer::CreateIndexer()
     return (firstGoodRecord+ 1) % size;
 }
 
-bool DataBuffer::GetNextRecord(int &co2, int &sound, int &hour, int &minute, int &indexer) 
+bool DataBuffer::GetNextRecord(int &co2, int &sound, int &maxIntSound, int &hour, int &minute, int &indexer) 
 { 
     if (indexer == saveIndex) // If we've looped through all records
         return false; // No more records to read
 
     co2 = buffer[indexer].GetCO2();
     sound = buffer[indexer].GetSound();
+    maxIntSound = buffer[indexer].GetIntMaxSound(); 
     hour = buffer[indexer].GetHour();
     minute = buffer[indexer].GetMinute();
 

@@ -14,7 +14,7 @@ Graph::~Graph()
 void Graph::DrawDoubleGraph(int x, int y, int width, int height, int currentHour, int currentMinute )
 {
     
-    int co2, sound, hour, minute;
+    int co2, sound, maxIntSound, hour, minute;
     int indexer = dataBuffer->CreateIndexer(); // Create an indexer for the data buffer
     int recordCount = dataBuffer->GetRecordCount(); // Get the number of records in the buffer
 
@@ -25,9 +25,9 @@ void Graph::DrawDoubleGraph(int x, int y, int width, int height, int currentHour
     int maxSound = (dataBuffer->GetMaxSound() / 10 + 1) *10; // Adjust the maxSound value to fit within the graph height
     int minSound = (dataBuffer->GetMinSound() / 10)*10; // Adjust the minSound value to fit within the graph height
 
-    int graphHeight = height/2 - 8; // Leave space for labels and axes
-    int graphWidth = width - 30; // Leave space for labels and axes
-    int graphX = x + 30;
+    int graphHeight = height/2 - 5; // Leave space for labels and axes
+    int graphWidth = width - 21; // Leave space for labels and axes
+    int graphX = x + 21;
     int graphCo2Y = y+graphHeight; // Starting Y position for the graph
     int graphSoundY = y+height; // Starting Y position for the graph
     int xScaleY = y + graphHeight + 1; // Y position for the X-axis labels
@@ -51,26 +51,33 @@ void Graph::DrawDoubleGraph(int x, int y, int width, int height, int currentHour
 
     char buffer[20];
     sprintf(buffer, "%4d", maxCO2  ); 
-    paint->DrawStringAt( x, y , buffer, &Font12, lineColour); // Draw CO2 label
+    paint->DrawStringAt( x, y , buffer, &Font8, lineColour); // Draw CO2 label
 
     sprintf(buffer, "%4d", (maxCO2 + minCO2)/2  ); 
-    paint->DrawStringAt( x, y + graphHeight/ 2 - 5 , buffer, &Font12, lineColour); // Draw CO2 label
+    paint->DrawStringAt( x, y + graphHeight/ 2 - 3 , buffer, &Font8, lineColour); // Draw CO2 label
 
     sprintf(buffer, "%4d", minCO2  ); 
-    paint->DrawStringAt( x, graphCo2Y - 9 , buffer, &Font12, lineColour); // Draw CO2 label
+    paint->DrawStringAt( x, graphCo2Y - 5 , buffer, &Font8, lineColour); // Draw CO2 label
 
     sprintf(buffer, "%4d", maxSound  ); 
-    paint->DrawStringAt( x , graphSoundY - graphHeight, buffer, &Font12, lineColour); // Draw CO2 label
+    paint->DrawStringAt( x , graphSoundY - graphHeight, buffer, &Font8, lineColour); // Draw CO2 label
 
     sprintf(buffer, "%4d", (minSound + maxSound)/2  ); 
-    paint->DrawStringAt( x , graphSoundY - graphHeight / 2 - 5, buffer, &Font12, lineColour); // Draw CO2 label
+    paint->DrawStringAt( x , graphSoundY - graphHeight / 2 - 3, buffer, &Font8, lineColour); // Draw CO2 label
 
     sprintf(buffer, "%4d", minSound  ); 
-    paint->DrawStringAt( x, graphSoundY - 9 , buffer, &Font12, lineColour); // Draw CO2 label
+    paint->DrawStringAt( x, graphSoundY - 5 , buffer, &Font8, lineColour); // Draw CO2 label
 
     sprintf(buffer, "%02d:%02d", currentHour, currentMinute);
-    paint->DrawStringAt( x + width - 34, graphCo2Y + 4 , buffer, &Font12, lineColour); // Draw CO2 label
+    paint->DrawStringAt( x + width - 24, graphCo2Y + 3 , buffer, &Font8, lineColour); // Draw CO2 label
 
+    paint->DrawStringAt( graphX + 5 , y + 2, "CO", &Font8, lineColour); // Draw CO2 label
+    paint->DrawStringAt( graphX + 15 , y + 5, "2", &Font8, lineColour); // Draw CO2 label
+
+    paint->DrawStringAt( x , y + graphHeight / 4 - 3, "ppm", &Font8, lineColour); // Draw CO2 label
+ 
+    paint->DrawStringAt( graphX + 5 , graphSoundY - graphHeight + 2, "Noise", &Font8, lineColour); // Draw CO2 label
+    paint->DrawStringAt( x , graphSoundY - graphHeight * 3 / 4 - 3, "dB", &Font8, lineColour); // Draw CO2 label
     
     // Draw the graph here using the paint object and data from the dataBuffer
     // You can use paint->DrawPixel() or other methods to draw the graph on the screen
@@ -80,7 +87,7 @@ void Graph::DrawDoubleGraph(int x, int y, int width, int height, int currentHour
     int i=0;
     int initialHour =0, initialMinute = 0;
     
-    while (dataBuffer->GetNextRecord(co2, sound, hour, minute, indexer)) 
+    while (dataBuffer->GetNextRecord(co2, sound, maxIntSound, hour, minute, indexer)) 
     {
 
         int xPos = graphX + (i * graphWidth) / recordCount; // Calculate the X position for the current data point
@@ -100,6 +107,7 @@ void Graph::DrawDoubleGraph(int x, int y, int width, int height, int currentHour
             // Draw lines between points for CO2 and sound levels
             paint->DrawLine(lastx, lastCO2y, xPos, co2Y, lineColour); // Draw line for CO2
             paint->DrawLine(lastx, lastSoundy, xPos, soundY, lineColour); // Draw line for sound
+            paint->DrawPixel(xPos, soundY, lineColour); // Draw pixel for CO2
             
         }
 
@@ -116,7 +124,25 @@ void Graph::DrawDoubleGraph(int x, int y, int width, int height, int currentHour
     {
         // Draw the last point for CO2 and sound levels    
         sprintf(buffer, "%02d:%02d", initialHour, initialMinute);
-        paint->DrawStringAt( graphX, graphCo2Y + 4 , buffer, &Font12, lineColour); // Draw CO2 label
+        paint->DrawStringAt( graphX, graphCo2Y + 3 , buffer, &Font8, lineColour); // Draw CO2 label
+
+        //Mid point
+
+        if( currentHour < initialHour )
+        {
+            currentHour += 24; // Adjust for midnight crossing
+        }
+        int midTime  = ((currentHour - initialHour) * 60 + (currentMinute - initialMinute)) / 2; // Calculate the mid time in minutes
+        int midHour = initialHour + (midTime / 60); // Calculate the mid hour
+        int midMinute = initialMinute + (midTime % 60); // Calculate the mid minute
+          
+        if( midHour >= 24 )
+        {
+            midHour -= 24; // Adjust for overflow in hours
+        }
+
+        sprintf(buffer, "%02d:%02d", midHour, midMinute);
+        paint->DrawStringAt( graphX + graphWidth/2 - 12, graphCo2Y + 3 , buffer, &Font8, lineColour); // Draw CO2 label
 
     }
 
