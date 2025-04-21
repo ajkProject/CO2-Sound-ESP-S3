@@ -787,8 +787,8 @@ void loop()
   Serial.println();
   UpdateDisplay();
 
-  //Make this wake up every minute
-  
+  //Make this wake up every second and check the minte has changed
+
   //DisplayCO2();
 
   delay(100);
