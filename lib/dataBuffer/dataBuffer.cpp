@@ -1,6 +1,6 @@
 #include "dataBuffer.h"
 
-DataBuffer::DataBuffer(int size) :saveIndex(0), size(size), maxCo2(0), minCo2(__INT_MAX__), maxSound(0), minSound(__INT_MAX__), firstGoodRecord(0), dataWrapped(false)
+DataBuffer::DataBuffer(int size) :saveIndex(0), size(size), maxCo2(0), minCo2(__INT_MAX__), maxSound(0), minSound(__INT_MAX__), firstGoodRecord(0), dataWrapped(false), averageSoundSum(0)
 {
     // Initialize the buffer with empty DataRecord objects
 
@@ -24,6 +24,17 @@ void DataBuffer::AddRecord(int co2, int sound, int maxIntSound, int hour, int mi
        if (co2 < minCo2) minCo2 = co2;
        if (maxIntSound > maxSound) maxSound = maxIntSound;
        if (sound < minSound) minSound = sound;
+
+       if( dataWrapped == false) // If the buffer has not wrapped around
+       {
+           averageSoundSum += sound; // Add the sound level to the sum for average calculation
+       }
+       else
+       {
+           averageSoundSum -= deletingMinSound; // Subtract the sound level of the deleted record from the sum for average calculation
+           averageSoundSum += sound; // Add the new sound level to the sum for average calculation
+       }
+
    
     buffer[saveIndex].UpdateDataRecord(co2, sound, maxIntSound, hour, minute);
 
@@ -108,6 +119,18 @@ int DataBuffer::GetMaxCO2() { return maxCo2; }
 int DataBuffer::GetMinCO2() { return minCo2; }      
 int DataBuffer::GetMaxSound() { return maxSound; }
 int DataBuffer::GetMinSound() { return minSound; }
+int DataBuffer::GetAverageSound() 
+{  
+
+    if( saveIndex == 0) // If the buffer is empty
+        return 0; // Return 0 as the average sound level
+
+    if( dataWrapped == false) // If the buffer has not wrapped around
+        return averageSoundSum / saveIndex; // Return the average sound level
+
+    return averageSoundSum / size; // If the buffer has wrapped around, return the average sound level
+
+}
 
 int DataBuffer::CreateIndexer() 
 { 

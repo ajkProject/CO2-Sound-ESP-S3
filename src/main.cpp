@@ -620,24 +620,26 @@ bool DisplayCO2(DataRecord *currentRecord) {
     Serial.println();
 
     char currentCO2[16];
-    char temperatureStr[16];
-    char humidity[16];
     sprintf(currentCO2, "%4dppm", co2Concentration);
-    sprintf(temperatureStr, "Temp %2.1f C", temperature);
-    sprintf(humidity, "Humd %2.1f%%", relativeHumidity);
-  
-  paint.DrawStringAt(4, 68, "CO", &Font16, DARKGRAY);
-  paint.DrawStringAt(4 + Font16.Width*2, 74, "2", &Font12, DARKGRAY);
-  paint.DrawStringAt(4 + Font16.Width*3, 68, currentCO2, &Font16, DARKGRAY);
+    
+    paint.DrawStringAt(4, 68, "CO", &Font16, DARKGRAY);
+    paint.DrawStringAt(4 + Font16.Width*2, 74, "2", &Font12, DARKGRAY);
+    paint.DrawStringAt(4 + Font16.Width*3, 68, currentCO2, &Font16, DARKGRAY);
 
-  paint.DrawStringAt(4, 86, temperatureStr, &Font12, DARKGRAY);
-  paint.DrawStringAt(4 + Font12.Width*10, 86, humidity, &Font12, DARKGRAY);
+    if( resultsBuffer->GetMaxCO2() != 0)
+    {
 
-  //paint.Bar( 4, 36, 120, 30, co2Concentration, 1000 , 0, 1500, DARKGRAY);
+        char minMaxCo2[30];
 
-  currentRecord->SetCO2(co2Concentration);
+        sprintf(minMaxCo2, "Min %4d Max %4d" , resultsBuffer->GetMinCO2(), resultsBuffer->GetMaxCO2() );
 
-  return true;
+        paint.DrawStringAt(4, 86, minMaxCo2, &Font12, DARKGRAY);
+        
+    }
+
+    currentRecord->SetCO2(co2Concentration);
+
+    return true;
 }
 
 void DisplayTime( DataRecord *currentRecord)
@@ -650,7 +652,7 @@ void DisplayTime( DataRecord *currentRecord)
   
  
   paint.DrawStringAt(4, 4, currentTime, &Font36, BLACK);  
-  paint.DrawStringAt(7, 44, currentDate, &Font16, BLACK);
+  paint.DrawStringAt(9, 44, currentDate, &Font16, BLACK);
 
   currentRecord->SetTime(rtc.hours(), rtc.minutes());
   
@@ -681,14 +683,17 @@ void DisplaySoundLevel( DataRecord *currentRecord)
   //Clear min/max registers
   reg_write(PCBARTISTS_DBM, I2C_REG_RESET, 0x02);
 
-  char maxSoundLevel[16];
-  sprintf(maxSoundLevel, "Max %3ddB", max_sound_level);
   
   paint.DrawStringAt(4, 100, "Noise", &Font16, BLACK);
   paint.DrawStringAt(4 + Font16.Width * 6, 100, currentSoundLevel, &Font16, BLACK);
-
-  paint.DrawStringAt(4, 114, minSoundLevel, &Font12, BLACK);
-  paint.DrawStringAt(4 + Font12.Width * 10, 114, maxSoundLevel, &Font12, BLACK);
+  
+  if( resultsBuffer->GetMaxSound() != 0)
+  {
+    char soundLevel[30];
+    sprintf(soundLevel, "Ave %3d Max %3d", resultsBuffer->GetAverageSound(), resultsBuffer->GetMaxSound());
+    paint.DrawStringAt(4, 114, soundLevel, &Font12, BLACK);
+    
+  }
 
   currentRecord->SetSound(sound_level);
   currentRecord->SetIntMaxSound(max_sound_level);
@@ -787,12 +792,12 @@ void loop()
   if( rtc.seconds() == 0 )
   {
   
-    if( rtc.minutes() == 18 )
-    {
-        epd.ClearFrameMemory(WHITE);   // bit set = white, bit reset = black
-        epd.DisplayFrame();
-        epd.WaitUntilIdle();
-    }
+    // if( rtc.minutes() == 18 )
+    // {
+    //     epd.ClearFrameMemory(WHITE);   // bit set = white, bit reset = black
+    //     epd.DisplayFrame();
+    //     epd.WaitUntilIdle();
+    // }
     Serial.print(rtc.lastRead());
     Serial.print("\t");
     printDate(Serial);

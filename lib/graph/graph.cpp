@@ -86,6 +86,9 @@ void Graph::DrawDoubleGraph(int x, int y, int width, int height, int currentHour
     bool firstTime = true;
     int i=0;
     int initialHour =0, initialMinute = 0;
+    bool newPixel = true;
+    int currentX = 0;
+    int pixelMaxSoundY = 0;
     
     while (dataBuffer->GetNextRecord(co2, sound, maxIntSound, hour, minute, indexer)) 
     {
@@ -95,6 +98,9 @@ void Graph::DrawDoubleGraph(int x, int y, int width, int height, int currentHour
 
         int co2Y = graphCo2Y - ((co2 - minCO2) * graphHeight) / co2Scale; // Calculate the Y position for CO2
         int soundY = graphSoundY - ((sound - minSound) * graphHeight) / soundScale; // Calculate the Y position for sound
+        int maxSoundY = graphSoundY - ((maxIntSound - minSound) * graphHeight) / soundScale; // Calculate the Y position for sound
+        
+       
 
         if( firstTime)
         {
@@ -107,8 +113,22 @@ void Graph::DrawDoubleGraph(int x, int y, int width, int height, int currentHour
             // Draw lines between points for CO2 and sound levels
             paint->DrawLine(lastx, lastCO2y, xPos, co2Y, lineColour); // Draw line for CO2
             paint->DrawLine(lastx, lastSoundy, xPos, soundY, lineColour); // Draw line for sound
-            paint->DrawPixel(xPos, soundY, lineColour); // Draw pixel for CO2
             
+            
+        }
+
+        if( currentX != xPos)
+        {
+            paint->DrawPixel(currentX, pixelMaxSoundY, lineColour); // Draw pixel for CO2
+            currentX = xPos; // Update the current X position
+            pixelMaxSoundY = maxSoundY;
+        }
+        else
+        {
+            if( pixelMaxSoundY < maxSoundY)
+            {
+                pixelMaxSoundY = maxSoundY; // Update the maximum Y position for sound
+            }
         }
 
         lastx = xPos;

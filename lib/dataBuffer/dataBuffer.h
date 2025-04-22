@@ -14,6 +14,7 @@ class DataBuffer
         int GetMinCO2();    
         int GetMaxSound(); 
         int GetMinSound(); 
+        int GetAverageSound(); // Get the average sound level
 
         //Todo - do we pass out an index or just have one.
         int CreateIndexer(); 
@@ -28,6 +29,7 @@ class DataBuffer
         int minCo2;
         int maxSound;
         int minSound;
+        int averageSoundSum;
         int firstGoodRecord; // First record that is not empty
         bool dataWrapped;
 
