@@ -58,6 +58,7 @@ extern sFONT Font36;
 extern sFONT Font24;
 extern sFONT Font20;
 extern sFONT Font16;
+extern sFONT Font16Symbol;
 extern sFONT Font12;
 extern sFONT Font8;
 
