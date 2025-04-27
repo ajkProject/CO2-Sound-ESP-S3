@@ -622,18 +622,18 @@ bool DisplayCO2(DataRecord *currentRecord) {
     char currentCO2[16];
     sprintf(currentCO2, "%4dppm", co2Concentration);
     
-    paint.DrawStringAt(4, 68, "CO", &Font16, DARKGRAY);
-    paint.DrawStringAt(4 + Font16.Width*2, 74, "2", &Font12, DARKGRAY);
-    paint.DrawStringAt(4 + Font16.Width*3, 68, currentCO2, &Font16, DARKGRAY);
+    paint.DrawStringAt(9, 68, "CO", &Font16, DARKGRAY);
+    paint.DrawStringAt(9 + Font16.Width*2, 74, "2", &Font12, DARKGRAY);
+    paint.DrawStringAt(9 + Font16.Width*3, 68, currentCO2, &Font16, DARKGRAY);
 
     if( resultsBuffer->GetMaxCO2() != 0)
     {
 
         char minMaxCo2[30];
 
-        sprintf(minMaxCo2, "Min %4d Max %4d" , resultsBuffer->GetMinCO2(), resultsBuffer->GetMaxCO2() );
+        sprintf(minMaxCo2, "Min %dppm  Max %dppm" , resultsBuffer->GetMinCO2(), resultsBuffer->GetMaxCO2() );
 
-        paint.DrawStringAt(4, 86, minMaxCo2, &Font12, DARKGRAY);
+        paint.DrawStringAt(14, 86, minMaxCo2, &Font8, DARKGRAY);
         
     }
 
@@ -684,14 +684,14 @@ void DisplaySoundLevel( DataRecord *currentRecord)
   reg_write(PCBARTISTS_DBM, I2C_REG_RESET, 0x02);
 
   
-  paint.DrawStringAt(4, 100, "Noise", &Font16, BLACK);
-  paint.DrawStringAt(4 + Font16.Width * 6, 100, currentSoundLevel, &Font16, BLACK);
+  paint.DrawStringAt(9, 100, "Sound", &Font16, BLACK);
+  paint.DrawStringAt(9 + Font16.Width * 6, 100, currentSoundLevel, &Font16, BLACK);
   
   if( resultsBuffer->GetMaxSound() != 0)
   {
     char soundLevel[30];
-    sprintf(soundLevel, "Ave %3d Max %3d", resultsBuffer->GetAverageSound(), resultsBuffer->GetMaxSound());
-    paint.DrawStringAt(4, 114, soundLevel, &Font12, BLACK);
+    sprintf(soundLevel, "Ave %ddB  Max %ddB", resultsBuffer->GetAverageSound(), resultsBuffer->GetMaxSound());
+    paint.DrawStringAt(14, 114, soundLevel, &Font8, BLACK);
     
   }
 

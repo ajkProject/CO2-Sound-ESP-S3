@@ -76,7 +76,7 @@ void Graph::DrawDoubleGraph(int x, int y, int width, int height, int currentHour
 
     paint->DrawStringAt( x , y + graphHeight / 4 - 3, "ppm", &Font8, lineColour); // Draw CO2 label
  
-    paint->DrawStringAt( graphX + 5 , graphSoundY - graphHeight + 2, "Noise", &Font8, lineColour); // Draw CO2 label
+    paint->DrawStringAt( graphX + 5 , graphSoundY - graphHeight + 2, "Sound", &Font8, lineColour); // Draw CO2 label
     paint->DrawStringAt( x , graphSoundY - graphHeight * 3 / 4 - 3, "dB", &Font8, lineColour); // Draw CO2 label
     
     // Draw the graph here using the paint object and data from the dataBuffer
@@ -148,7 +148,7 @@ void Graph::DrawDoubleGraph(int x, int y, int width, int height, int currentHour
 
         //Mid point
 
-        if( currentHour < initialHour )
+        if( currentHour <= initialHour )
         {
             currentHour += 24; // Adjust for midnight crossing
         }
