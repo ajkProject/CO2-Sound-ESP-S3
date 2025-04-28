@@ -191,7 +191,7 @@ void printDate(Stream &str);
 void printTime(Stream &str);
 int wifiScan();
 
-char* months[12] = {"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
+const char* months[12] = {"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
 
 void PrintUint64(uint64_t& value) {
   Serial.print("0x");
@@ -297,6 +297,7 @@ void WiFiGotIP(WiFiEvent_t event, WiFiEventInfo_t info){
 bool ConnectWiFi()
 {
 
+  
   wifiScan();
   //WiFi.mode(WIFI_STA);
   WiFi.disconnect();
@@ -723,7 +724,16 @@ void UpdateDisplay( )
     Serial.println(resultsBuffer->GetMinSound());
 
   Graph *graph = new Graph(&paint, resultsBuffer, BLACK );
+
+  char wifiStatus[2] = "$";
+
+  if( WiFi.status() != WL_CONNECTED )
+  {
+    wifiStatus[0] = ' ';
+  }
  
+  paint.DrawStringAt(135, 107, wifiStatus, &Font16Symbol, BLACK);
+
   graph->DrawDoubleGraph( 148, 4, 144, 120, currentRecord.GetHour(), currentRecord.GetMinute());
   
   epd.SetFrameMemory_Partial(paint.GetImage(), 0, 0, paint.GetWidth(), paint.GetHeight());
@@ -792,12 +802,25 @@ void loop()
   if( rtc.seconds() == 0 )
   {
   
-    // if( rtc.minutes() == 18 )
-    // {
-    //     epd.ClearFrameMemory(WHITE);   // bit set = white, bit reset = black
-    //     epd.DisplayFrame();
-    //     epd.WaitUntilIdle();
-    // }
+     if(( rtc.hours() == 2 )&&( rtc.minutes() == 1 ))
+     {
+
+   
+        if( WiFi.status() != WL_CONNECTED )
+        {
+            WiFi.reconnect();   
+        }
+        else
+        {
+          Serial.println("Already connected to WiFi");
+        }
+        if( WiFi.status() != WL_CONNECTED )
+        {
+          Serial.println("Time to update RTC time");
+          SetRTCTime();
+        }
+     }
+   
     Serial.print(rtc.lastRead());
     Serial.print("\t");
     printDate(Serial);

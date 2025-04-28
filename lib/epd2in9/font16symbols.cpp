@@ -1689,7 +1689,7 @@ const uint8_t Font16Symbol_Table[] PROGMEM =
 sFONT Font16Symbol = {
   Font16Symbol_Table,
   16, /* Width */
-  16, /* Height */
+  14, /* Height */
 };
 
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
