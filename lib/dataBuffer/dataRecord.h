@@ -1,3 +1,5 @@
+#ifndef DATARECORD_H
+#define DATARECORD_H
 class DataRecord
 {
 
@@ -25,3 +27,5 @@ class DataRecord
         int maxIntSound; //Max sound for this interval
         int time;
 };
+
+#endif

@@ -1,3 +1,6 @@
+#ifndef DATABUFFER_H
+#define DATABUFFER_H
+
 #include "dataRecord.h"
 
 class DataBuffer
@@ -39,3 +42,5 @@ class DataBuffer
     // Get record the GetNext?
 
 };
+
+#endif

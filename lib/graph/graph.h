@@ -1,3 +1,7 @@
+#ifndef GRAPH_H
+#define GRAPH_H
+
+
 #include "dataBuffer.h"
 #include "epdpaint.h"
 
@@ -19,3 +23,5 @@ class Graph
        
 
 };
+
+#endif

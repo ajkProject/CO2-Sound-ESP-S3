@@ -1,79 +1,5 @@
 #include <Arduino.h>
 
-// #include <Wire.h>
- 
-// #define PCBARTISTS_DBM 0x48
- 
-// #define I2C_REG_VERSION      0x00
-// #define I2C_REG_ID3          0x01
-// #define I2C_REG_ID2          0x02
-// #define I2C_REG_ID1          0x03
-// #define I2C_REG_ID0          0x04
-// #define I2C_REG_SCRATCH      0x05
-// #define I2C_REG_CONTROL      0x06
-// #define I2C_REG_TAVG_HIGH    0x07
-// #define I2C_REG_TAVG_LOW     0x08
-// #define I2C_REG_RESET        0x09
-// #define I2C_REG_DECIBEL      0x0A
-// #define I2C_REG_MIN          0x0B
-// #define I2C_REG_MAX          0x0C
-// #define I2C_REG_THR_MIN      0x0D
-// #define I2C_REG_THR_MAX      0x0E
-// #define I2C_REG_HISTORY_0    0x14
-// #define I2C_REG_HISTORY_99   0x77
- 
-// byte reg_read(byte addr, byte reg);
-
-// void setup() 
-// {
-//   Serial.begin(9600);
-//   Wire.begin();
-  
-//   byte version = reg_read(PCBARTISTS_DBM, I2C_REG_VERSION);
-//   Serial.print("dbMeter VERSION = 0x");
-//   Serial.println(version, HEX);
- 
-//   byte id[4];
-//   id[0] = reg_read(PCBARTISTS_DBM, I2C_REG_ID3);
-//   id[1] = reg_read(PCBARTISTS_DBM, I2C_REG_ID2);
-//   id[2] = reg_read(PCBARTISTS_DBM, I2C_REG_ID1);
-//   id[3] = reg_read(PCBARTISTS_DBM, I2C_REG_ID0);
- 
-//   Serial.print("Unique ID = ");
-//   Serial.print(id[0], HEX); 
-//   Serial.print(" ");
-//   Serial.print(id[1], HEX); 
-//   Serial.print(" ");
-//   Serial.print(id[2], HEX); 
-//   Serial.print(" ");
-//   Serial.println(id[3], HEX); 
-// }
- 
-// void loop() 
-// {
-//   byte sound_level = reg_read(PCBARTISTS_DBM, I2C_REG_DECIBEL);
-//   Serial.print("Sound Level (dB SPL) = ");
-//   Serial.println(sound_level);
-//   delay(2000);
-// }
- 
-// byte reg_read(byte addr, byte reg) 
-// {
-//   Wire.beginTransmission(addr);
-//   Wire.write(reg);
-//   Wire.endTransmission();
-//   Wire.requestFrom(addr, (uint8_t)1);
-//   byte data = Wire.read();
-//   return data;
-// }
-
-//
-//    FILE: SD2405_demo_write.ino
-//  AUTHOR: Rob Tillaart
-// PURPOSE: test basic write function
-//     URL: https://github.com/RobTillaart/SD2405
-
-
 #include "SD2405.h"
 #include "ArduinoJson.h"
 #include <WiFi.h>
@@ -85,6 +11,7 @@
 #include <Wire.h>
 //#include "dataBuffer.h"
 #include "graph.h"
+#include "extendedDataRecord.h"
 
 #define COLORED     0
 #define UNCOLORED   1
@@ -101,6 +28,7 @@
  unsigned long time_start_ms;
  unsigned long time_now_s;
  char time_string[] = {'0', '0', ':', '0', '0', '\0'}; 
+ bool overnightTimeUpdate = false;
 
  //Declarations for WiFi
  const char* ssid = "Alexzz";
@@ -569,7 +497,7 @@ bool SetUpSoundLevel()
   
 }
 
-bool DisplayCO2(DataRecord *currentRecord) {
+bool DisplayCO2(ExtendedDataRecord *currentRecord) {
 
     bool dataReady = false;
     uint16_t co2Concentration = 0;
@@ -639,19 +567,29 @@ bool DisplayCO2(DataRecord *currentRecord) {
     }
 
     currentRecord->SetCO2(co2Concentration);
+    currentRecord->SetTemp(temperature);
+    currentRecord->SetHumidity(relativeHumidity);
 
     return true;
 }
 
-void DisplayTime( DataRecord *currentRecord)
+void DisplayTime( ExtendedDataRecord *currentRecord)
  {
 
   char currentTime[16];
   sprintf(currentTime, "%02d:%02d", rtc.hours(), rtc.minutes());
   char currentDate[16];
-  sprintf(currentDate, "%2d %s %04d",rtc.day(), months[rtc.month()], 2000 + rtc.year());
+
+  if(overnightTimeUpdate)
+  {
+    sprintf(currentDate, "%2d %s %04d.",rtc.day(), months[rtc.month()], 2000 + rtc.year());  
+  }
+  else
+  {
+    sprintf(currentDate, "%2d %s %04d",rtc.day(), months[rtc.month()], 2000 + rtc.year());
+  }
   
- 
+  
   paint.DrawStringAt(4, 4, currentTime, &Font36, BLACK);  
   paint.DrawStringAt(9, 44, currentDate, &Font16, BLACK);
 
@@ -660,7 +598,7 @@ void DisplayTime( DataRecord *currentRecord)
 
 }
 
-void DisplaySoundLevel( DataRecord *currentRecord)
+void DisplaySoundLevel( ExtendedDataRecord *currentRecord)
 {
   
   byte sound_level = reg_read(PCBARTISTS_DBM, I2C_REG_DECIBEL);
@@ -698,11 +636,12 @@ void DisplaySoundLevel( DataRecord *currentRecord)
 
   currentRecord->SetSound(sound_level);
   currentRecord->SetIntMaxSound(max_sound_level);
+  currentRecord->SetIntMinSound(min_sound_level);
 }
 
 void UpdateDisplay( )
 {
-  DataRecord currentRecord;
+  ExtendedDataRecord currentRecord;
   paint.SetRotate(ROTATE_90);
   
   paint.Clear(WHITE);
@@ -740,6 +679,8 @@ void UpdateDisplay( )
  
   epd.DisplayFrame_Partial();
   epd.WaitUntilIdle();
+
+  //Update the weather server api with the current data
   
 }
 
@@ -817,7 +758,7 @@ void loop()
         if( WiFi.status() != WL_CONNECTED )
         {
           Serial.println("Time to update RTC time");
-          SetRTCTime();
+          overnightTimeUpdate = SetRTCTime();
         }
      }
    
@@ -851,61 +792,3 @@ void printTime(Stream &str)
   str.print(buffer);
 }
 
-// #include "driver/i2s.h"
-
-// const i2s_port_t I2S_PORT = I2S_NUM_0;
-
-// void setup() {
-//   Serial.begin(115200);
-//   esp_err_t err;
-
-//   // The I2S config as per the example
-//   const i2s_config_t i2s_config = {
-//       .mode = i2s_mode_t(I2S_MODE_MASTER | I2S_MODE_RX), // Receive, not transfer
-//       .sample_rate = 16000,                         // 16KHz
-//       .bits_per_sample = I2S_BITS_PER_SAMPLE_32BIT, // could only get it to work with 32bits
-//       .channel_format = I2S_CHANNEL_FMT_ONLY_RIGHT, // use right channel
-//       .communication_format = i2s_comm_format_t(I2S_COMM_FORMAT_I2S | I2S_COMM_FORMAT_I2S_MSB),
-//       .intr_alloc_flags = ESP_INTR_FLAG_LEVEL1,     // Interrupt level 1
-//       .dma_buf_count = 4,                           // number of buffers
-//       .dma_buf_len = 8                              // 8 samples per buffer (minimum)
-//   };
-
-//   // The pin config as per the setup
-//   const i2s_pin_config_t pin_config = {
-//       .bck_io_num = 4,   // Serial Clock (SCK)
-//       .ws_io_num = 5,    // Word Select (WS)
-//       .data_out_num = I2S_PIN_NO_CHANGE, // not used (only for speakers)
-//       .data_in_num = 6   // Serial Data (SD)
-//   };
-
-//   // Configuring the I2S driver and pins.
-//   // This function must be called before any I2S driver read/write operations.
-//   err = i2s_driver_install(I2S_PORT, &i2s_config, 0, NULL);
-//   if (err != ESP_OK) {
-//     Serial.printf("Failed installing driver: %d\n", err);
-//     while (true);
-//   }
-//   err = i2s_set_pin(I2S_PORT, &pin_config);
-//   if (err != ESP_OK) {
-//     Serial.printf("Failed setting pin: %d\n", err);
-//     while (true);
-//   }
-//   Serial.println("I2S driver installed.");
-// }
-
-// void loop() 
-// {
-
-//   // Read a single sample and log it for the Serial Plotter.
-//   int32_t sample = 0;
-//   size_t bytes_read = 0;
-  
-//   esp_err_t result = i2s_read(I2S_PORT, (char *)&sample, sizeof(sample), &bytes_read, /*portMAX_DELAY*/ 10); // no timeout
-
-//   if (result == ESP_OK && bytes_read > 0)
-//   {
-//     Serial.println(sample);
-//   }
-// }
-  
