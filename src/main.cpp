@@ -34,6 +34,8 @@
  const char* ssid = "Alexzz";
  const char* password = "23atKnoydart";
  String serviceName = "https://www.timeapi.io/api/time/current/zone?timeZone=Europe%2FLondon";
+ String writeServiceName = "https://www.ajk.me.uk/api/AirQuality/CO2Sound";
+ const char* apiKey = "e1566d1869bc44ad966d1869bce4adad";
  HTTPClient http;
 
  const char* timeapiRootCa = \
@@ -639,6 +641,73 @@ void DisplaySoundLevel( ExtendedDataRecord *currentRecord)
   currentRecord->SetIntMinSound(min_sound_level);
 }
 
+bool WriteDataToServer( ExtendedDataRecord *currentRecord)
+{
+  //Send the data to the server
+  //https://www.ajk.me.uk/api/CO2Sound
+
+
+  DynamicJsonDocument doc(2048);
+  doc["APIKEY"] = apiKey;
+  doc["STATIONID"] = 1;
+  doc["CO2"] = currentRecord->GetCO2();
+  doc["TEMPERATURE"] = currentRecord->GetTemp();
+  doc["HUMIDITY"] = currentRecord->GetHumidity();
+  doc["SOUND"] = currentRecord->GetSound(); 
+  doc["INTERVALMINSOUND"] = currentRecord->GetIntMaxSound();
+  doc["INTERVALMAXSOUND"] = currentRecord->GetIntMinSound();
+
+  // Serialize JSON document
+  String json;
+  serializeJson(doc, json);
+
+  if( WiFi.status() != WL_CONNECTED)
+  {
+    ConnectWiFi();
+  }
+
+
+    // Your Domain name with URL path or IP address with path
+    http.begin(writeServiceName);
+
+    http.setTimeout(20000); 
+      
+      // If you need an HTTP request with a content type: application/json, use the following:
+    http.addHeader("Content-Type", "application/json");
+            Serial.println("Header Content Type Set");
+    http.addHeader("Content-Length", String( json.length() ));
+            Serial.print("Header Content Lenght ");
+            Serial.println(String( json.length() ));
+    int httpResponseCode = http.POST(json);
+      
+
+    if(httpResponseCode>0)
+    {
+      String response = http.getString();  //Get the response to the request
+      Serial.print("HTTP Response code: ");
+      Serial.println(httpResponseCode);
+      Serial.print("Response: ");
+      Serial.println(response);           //Print request answer
+      
+    } 
+    else 
+    {
+      Serial.print("Error on sending POST: ");
+      Serial.println(http.errorToString(httpResponseCode));
+
+      http.end();
+
+      return false;
+
+    }
+      
+    // Free resources
+    http.end();
+
+    return true;
+
+}
+
 void UpdateDisplay( )
 {
   ExtendedDataRecord currentRecord;
@@ -681,6 +750,9 @@ void UpdateDisplay( )
   epd.WaitUntilIdle();
 
   //Update the weather server api with the current data
+
+  WriteDataToServer(&currentRecord);
+  Serial.println("Data sent to server");
   
 }
 
