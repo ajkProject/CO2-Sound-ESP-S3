@@ -34,7 +34,7 @@
  const char* ssid = "Alexzz";
  const char* password = "23atKnoydart";
  String serviceName = "https://www.timeapi.io/api/time/current/zone?timeZone=Europe%2FLondon";
- String writeServiceName = "https://www.ajk.me.uk/api/AirQuality/CO2Sound";
+ String writeServiceName = "https://www.ajk.me.uk/api/Environmental/CO2Sound";
  const char* apiKey = "e1566d1869bc44ad966d1869bce4adad";
  HTTPClient http;
 
@@ -687,12 +687,19 @@ bool WriteDataToServer( ExtendedDataRecord *currentRecord)
   doc["TEMPERATURE"] = currentRecord->GetTemp();
   doc["HUMIDITY"] = currentRecord->GetHumidity();
   doc["SOUND"] = currentRecord->GetSound(); 
-  doc["INTERVALMINSOUND"] = currentRecord->GetIntMaxSound();
-  doc["INTERVALMAXSOUND"] = currentRecord->GetIntMinSound();
+  doc["INTERVALMINSOUND"] = currentRecord->GetIntMinSound();
+  doc["INTERVALMAXSOUND"] = currentRecord->GetIntMaxSound();
+
+     Serial.print("Max Sound Level ");
+      Serial.println(currentRecord->GetIntMaxSound());
+
 
   // Serialize JSON document
   String json;
   serializeJson(doc, json);
+
+  Serial.print("JSON: ");
+  Serial.println(json);
 
   if( WiFi.status() != WL_CONNECTED)
   {
