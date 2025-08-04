@@ -617,11 +617,11 @@ void DisplayTime( ExtendedDataRecord *currentRecord)
 
   if(overnightTimeUpdate)
   {
-    sprintf(currentDate, "%2d %s %04d.",rtc.day(), months[rtc.month()], 2000 + rtc.year());  
+    sprintf(currentDate, "%2d %s %04d.",rtc.day(), months[rtc.month()-1], 2000 + rtc.year());  
   }
   else
   {
-    sprintf(currentDate, "%2d %s %04d",rtc.day(), months[rtc.month()], 2000 + rtc.year());
+    sprintf(currentDate, "%2d %s %04d",rtc.day(), months[rtc.month()-1], 2000 + rtc.year());
   }
   
   
